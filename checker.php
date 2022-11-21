@@ -1,5 +1,5 @@
 <?php
-
+set_time_limit(0);
 function randPass($length, $strength=8) {
     $vowels = 'aeuy';
     $consonants = 'bdghjmnpqrstvz';
