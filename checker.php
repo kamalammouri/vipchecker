@@ -1,12 +1,68 @@
 <?php
 
-function random_strings($length_of_string){
-    $str_result = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz=+.';
-    return substr(str_shuffle($str_result),0, $length_of_string);
+function randPass($length, $strength=8) {
+    $vowels = 'aeuy';
+    $consonants = 'bdghjmnpqrstvz';
+    if ($strength >= 1) {
+        $consonants .= 'BDGHJLMNPQRSTVWXZ';
+    }
+    if ($strength >= 2) {
+        $vowels .= "AEUY";
+    }
+    if ($strength >= 4) {
+        $consonants .= '0123456789';
+    }
+    if ($strength >= 8) {
+        $consonants .= '-=+.';
+    }
+
+    $password = '';
+    $alt = time() % 2;
+        for ($i = 0; $i < $length; $i++) {
+            if ($alt == 1) {
+                $password .= $consonants[(rand() % strlen($consonants))];
+                $alt = 0;
+            } else {
+                $password .= $vowels[(rand() % strlen($vowels))];
+                $alt = 1;
+            }
+        }
+    return $password;   
+}
+
+function generateRandom($length = 10) {
+
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    $specials = '=+-_.';
+
+    $charactersLength = strlen($characters);
+
+    $randomString = '';
+
+    // Removed one from length to maintain desired length
+
+    // for special character addition
+
+    for ($i = 0; $i < $length - 1; $i++) {
+
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+
+    }
+
+    // Add the special character:
+
+    $randomString .= $specials[rand(0, strlen($specials) - 1)];
+
+    // Shuffle the returned string so the special is not always at the end
+
+    return str_shuffle($randomString);
+
 }
 function api($code){
 
-    $url = 'http://tpoentrance.cc/';
+    // $url = 'http://45.91.82.31/';
+    $url = 'http://194.124.216.122/';
     $post_data['card_no'] = $code;
     $post_data['submit'] = 'query';
     $post_data['action'] = 'yes';
@@ -51,13 +107,17 @@ function api($code){
 
 
 $code_no = array();
-for ($i=0;$i<10;$i++){
-    array_push($code_no,'I'.random_strings(14));
+
+while(count($code_no)<=1000){
+    $codeX = randPass(14);
+    // $codeX = generateRandom(14);
+
+    if(preg_match('/[^A-Za-z0-9]/', $codeX)){
+        array_push($code_no,'S'.$codeX);
+    }
 }
 
 foreach ($code_no as $code){
     print_r(api($code));
     echo '<br>';
 }
-
-?>
