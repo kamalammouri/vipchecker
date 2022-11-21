@@ -85,6 +85,10 @@ function api($code){
     curl_setopt($curl_connection, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, 1 );
 
+     //try params for fast curl
+    // curl_setopt($curl_connection, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+    // curl_setopt($curl_connection, CURLOPT_TCP_FASTOPEN, true); 
+
     //set data to be posted
     curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $post_string);
 
@@ -107,17 +111,34 @@ function api($code){
 
 
 $code_no = array();
-
-while(count($code_no)<=1000){
+while(count($code_no)<=100000){
     $codeX = randPass(14);
-    // $codeX = generateRandom(14);
+    $codeX = generateRandom(14);
 
     if(preg_match('/[^A-Za-z0-9]/', $codeX)){
-        array_push($code_no,'S'.$codeX);
+        if(getLineWithString($codeX) == -1){
+            array_push($code_no,'S'.$codeX);
+            $file = fopen('codes.txt', 'a+');
+            fwrite($file, 'S'.$codeX.PHP_EOL);
+            fclose($file);
+        }
     }
 }
 
-foreach ($code_no as $code){
-    print_r(api($code));
-    echo '<br>';
+// print_r(file('codes.txt'));
+// echo $lines;
+// foreach ($code_no as $code){
+//     print_r($code);
+//     echo '<br>';
+// }
+function getLineWithString($str) {
+    $lines = file('codes.txt');  
+    if($lines !== ''){
+        foreach ($lines as $line) {
+            if (strpos($line, $str) !== false) {
+                return $line;
+            }
+        }
+    }
+    return -1;
 }
