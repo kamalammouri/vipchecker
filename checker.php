@@ -141,15 +141,28 @@ function api($code){
 
 function execute($number=0){
     $file = file('codes.txt');
-    
-    foreach($file as $line){
-        print_r(api($line));
+    // foreach($file as $line){
+    //     print_r(api($line));
+    //     echo '<br>';
+    // }
+    for($i=0;$i<$number;$i++) {
+        print_r(api($file[$i]));
         echo '<br>';
     }
-    // for($i=0;$i<number;$i++) {
-    //     print_r(api($file[$i]));
-    //     echo '<br>';
-    //  }
+
+    $fileContents = file('newfile.txt');
+    if($number != 0) $setNum = $number;
+    if($number == 0) $setNum = count($file);
+    $newNumber = $fileContents[0] + $setNum;
+    // Remove first line
+    array_shift($fileContents);
+    // Add the new line to the beginning
+    array_unshift($fileContents, $newNumber);
+    // Write the file back
+    $newContent = implode("\n", $fileContents);
+    $fp = fopen('newfile.txt', "w+");   // w+ means create new or replace the old file-content
+    fputs($fp, $newContent);
+    fclose($fp);
 }
 
 execute();
