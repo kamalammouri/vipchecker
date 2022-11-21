@@ -96,7 +96,7 @@ function api($code){
     $end = stripos($response, "</body>");
     $body = substr($response,$start+46,$end-$start);
     
-    if(!stripos($body,'Error,Card_NO does not exist')){
+    if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
         $myfile = fopen("newfile.txt", "a") or die("Unable to open file!");
         fwrite($myfile, $code.':'.$body);
         fclose($myfile);
