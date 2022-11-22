@@ -59,8 +59,37 @@ function generateRandom($length = 10) {
     return str_shuffle($randomString);
 
 }
-function api($code){
 
+function genCodes($number){
+    $code_no = array();
+    while(count($code_no)<=$number){
+        $codeX = randPass(14);
+        // $codeX = generateRandom(14);
+
+        if(preg_match('/[^A-Za-z0-9]/', $codeX)){
+            if(getLineWithString($codeX) == -1){
+                array_push($code_no,'S'.$codeX);
+                $file = fopen('codes.txt', 'a+');
+                fwrite($file, 'S'.$codeX.PHP_EOL);
+                fclose($file);
+            }
+        }
+    }
+}
+
+function getLineWithString($str) {
+    $lines = file('codes.txt');  
+    if($lines !== ''){
+        foreach ($lines as $line) {
+            if (strpos($line, $str) !== false) {
+                return $line;
+            }
+        }
+    }
+    return -1;
+}
+
+function api($code){
     // $url = 'http://45.91.82.31/';
     $url = 'http://194.124.216.122/';
     $post_data['card_no'] = $code;
@@ -110,35 +139,30 @@ function api($code){
 }
 
 
-$code_no = array();
-while(count($code_no)<=100000){
-    $codeX = randPass(14);
-    $codeX = generateRandom(14);
-
-    if(preg_match('/[^A-Za-z0-9]/', $codeX)){
-        if(getLineWithString($codeX) == -1){
-            array_push($code_no,'S'.$codeX);
-            $file = fopen('codes.txt', 'a+');
-            fwrite($file, 'S'.$codeX.PHP_EOL);
-            fclose($file);
-        }
+function execute($number=0){
+    $file = file('codes.txt');
+    // foreach($file as $line){
+    //     print_r(api($line));
+    //     echo '<br>';
+    // }
+    for($i=0;$i<$number;$i++) {
+        print_r(api($file[$i]));
+        echo '<br>';
     }
+
+    $fileContents = file('newfile.txt');
+    if($number != 0) $setNum = $number;
+    if($number == 0) $setNum = count($file);
+    $newNumber = $fileContents[0] + $setNum;
+    // Remove first line
+    array_shift($fileContents);
+    // Add the new line to the beginning
+    array_unshift($fileContents, $newNumber);
+    // Write the file back
+    $newContent = implode("\n", $fileContents);
+    $fp = fopen('newfile.txt', "w+");   // w+ means create new or replace the old file-content
+    fputs($fp, $newContent);
+    fclose($fp);
 }
 
-// print_r(file('codes.txt'));
-// echo $lines;
-// foreach ($code_no as $code){
-//     print_r($code);
-//     echo '<br>';
-// }
-function getLineWithString($str) {
-    $lines = file('codes.txt');  
-    if($lines !== ''){
-        foreach ($lines as $line) {
-            if (strpos($line, $str) !== false) {
-                return $line;
-            }
-        }
-    }
-    return -1;
-}
+execute();
