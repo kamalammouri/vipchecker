@@ -102,7 +102,7 @@ function api($code){
         $post_items[] = $key . '=' . $value;
     }
     //create the final string to be posted using implode()
-    $post_string = implode ('&', $post_items);
+    $payload = implode ('&', $post_items);
 
     //create cURL connection
     $curl_connection =  curl_init($url);
@@ -119,7 +119,7 @@ function api($code){
     // curl_setopt($curl_connection, CURLOPT_TCP_FASTOPEN, true); 
 
     //set data to be posted
-    curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $post_string);
+    curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $payload);
 
     //perform our request
     $response = curl_exec($curl_connection);
@@ -139,32 +139,111 @@ function api($code){
 }
 
 
+function php_curl_multi($codes){
+    $url = 'http://45.91.82.31/';
+
+    $ch_index = array(); // store all curl init
+    $response = array();
+
+    // create both cURL resources
+    foreach ($codes as $key => $code) {
+        $post_data['card_no'] = $code;
+        $post_data['submit'] = 'query';
+        $post_data['action'] = 'yes';
+        $post_data['check_valid'] = 'yes';
+    
+        //traverse array and prepare data for posting (key1=value1)
+        foreach ( $post_data as $key => $value) {
+            $post_items[] = $key . '=' . $value;
+        }
+        //create the final string to be posted using implode()
+        $payload = implode ('&', $post_items);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,  $url);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10000);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $ch_index[] = $ch;
+    }
+
+    //create the multiple cURL handle
+    $mh = curl_multi_init();
+
+    //add the handles
+    foreach ($ch_index as $key => $ch) {
+        curl_multi_add_handle($mh,$ch);
+    }
+
+    //execute the multi handle
+    do {
+        $status = curl_multi_exec($mh, $active);
+        if ($active) {
+            curl_multi_select($mh);
+        }
+    } while ($active && $status == CURLM_OK);
+
+    //close the handles
+    foreach ($ch_index as $key => $ch) {
+        curl_multi_remove_handle($mh, $ch);
+    }
+    curl_multi_close($mh);
+    
+    // get all response
+    foreach ($ch_index as $key => $ch) {
+        $response[] = curl_multi_getcontent($ch);
+    }
+
+    return $response;
+}
+
 function execute($number=0){
     $file = file('codes.txt');
-    $fileContents = file('newfile.txt');
+    $fileCounter = file('counter.txt');
     if($number != 0) $setNum = $number;
     if($number == 0) $setNum = count($file);
-    $newNumber = ($fileContents[0] ?? 0) + $setNum;
-    // echo 'Start from: '.$fileContents[0].' to '.$newNumber.PHP_EOL;
+    $startNum = $fileCounter[0] ?? 0;
+    $endNum = $startNum + $setNum;
+    // echo 'Start from: '.$fileCounter[0].' to '.$endNum.PHP_EOL;
     $checkCodes = array();
-    for($i=$fileContents[0];$i<$newNumber;$i++){
+    for($i=$startNum;$i<$endNum;$i++){
         array_push($checkCodes,$file[$i]);
     }
     // Remove first line
-    array_shift($fileContents);
+    array_shift($fileCounter);
     // Add the new line to the beginning
-    array_unshift($fileContents, $newNumber);
+    array_unshift($fileCounter, $endNum);
     // Write the file back
-    $newContent = implode("\n", $fileContents);
-    $fp = fopen('newfile.txt', "w+");   // w+ means create new or replace the old file-content
+    $newContent = implode("\n", $fileCounter);
+    $fp = fopen('counter.txt', "w+");   // w+ means create new or replace the old file-content
     fputs($fp, $newContent);
     fclose($fp);
 
-    foreach($checkCodes as $code){
-        print_r(api($code));
+    $responses = php_curl_multi($checkCodes);
+    foreach($responses as $key => $response){
+        $start = stripos($response, "document.getElementById('prompt').innerHTML");
+        $end = stripos($response, "</body>");
+        $body = substr($response,$start+46,$end-$start);
+        
+        if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
+            $myfile = fopen("newfile.txt", "a") or die("Unable to open file!");
+            fwrite($myfile, $checkCodes[$key].':'.$body);
+            fclose($myfile);
+        }
+        echo var_export(['code'=>$checkCodes[$key],'status'=>$body]);
         echo '<br>';
     }
+    // foreach($checkCodes as $code){
+    //     // print_r(api($code));
+    //     // echo var_export($code);
+    //     echo '<br>';
+    // }
 
 }
 
-execute(1000);
+execute(100);
+
