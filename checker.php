@@ -1,97 +1,97 @@
 <?php
 set_time_limit(0);
-function randPass($length, $strength=8) {
-    $vowels = 'aeuy';
-    $consonants = 'bdghjmnpqrstvz';
-    if ($strength >= 1) {
-        $consonants .= 'BDGHJLMNPQRSTVWXZ';
-    }
-    if ($strength >= 2) {
-        $vowels .= "AEUY";
-    }
-    if ($strength >= 4) {
-        $consonants .= '0123456789';
-    }
-    if ($strength >= 8) {
-        $consonants .= '-=+.';
-    }
+// function randPass($length, $strength=8) {
+//     $vowels = 'aeuy';
+//     $consonants = 'bdghjmnpqrstvz';
+//     if ($strength >= 1) {
+//         $consonants .= 'BDGHJLMNPQRSTVWXZ';
+//     }
+//     if ($strength >= 2) {
+//         $vowels .= "AEUY";
+//     }
+//     if ($strength >= 4) {
+//         $consonants .= '0123456789';
+//     }
+//     if ($strength >= 8) {
+//         $consonants .= '-=+.';
+//     }
 
-    $password = '';
-    $alt = time() % 2;
-        for ($i = 0; $i < $length; $i++) {
-            if ($alt == 1) {
-                $password .= $consonants[(rand() % strlen($consonants))];
-                $alt = 0;
-            } else {
-                $password .= $vowels[(rand() % strlen($vowels))];
-                $alt = 1;
-            }
-        }
-    return $password;   
-}
+//     $password = '';
+//     $alt = time() % 2;
+//         for ($i = 0; $i < $length; $i++) {
+//             if ($alt == 1) {
+//                 $password .= $consonants[(rand() % strlen($consonants))];
+//                 $alt = 0;
+//             } else {
+//                 $password .= $vowels[(rand() % strlen($vowels))];
+//                 $alt = 1;
+//             }
+//         }
+//     return $password;   
+// }
 
-function generateRandom($length = 10) {
+// function generateRandom($length = 10) {
 
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+//     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    $specials = '=+-_.';
+//     $specials = '=+-_.';
 
-    $charactersLength = strlen($characters);
+//     $charactersLength = strlen($characters);
 
-    $randomString = '';
+//     $randomString = '';
 
-    // Removed one from length to maintain desired length
+//     // Removed one from length to maintain desired length
 
-    // for special character addition
+//     // for special character addition
 
-    for ($i = 0; $i < $length - 1; $i++) {
+//     for ($i = 0; $i < $length - 1; $i++) {
 
-        $randomString .= $characters[rand(0, $charactersLength - 1)];
+//         $randomString .= $characters[rand(0, $charactersLength - 1)];
 
-    }
+//     }
 
-    // Add the special character:
+//     // Add the special character:
 
-    $randomString .= $specials[rand(0, strlen($specials) - 1)];
+//     $randomString .= $specials[rand(0, strlen($specials) - 1)];
 
-    // Shuffle the returned string so the special is not always at the end
+//     // Shuffle the returned string so the special is not always at the end
 
-    return str_shuffle($randomString);
+//     return str_shuffle($randomString);
 
-}
+// }
 
-function genCodes($number){
-    $code_no = array();
-    while(count($code_no)<=$number){
-        $codeX = randPass(14);
-        // $codeX = generateRandom(14);
+// function genCodes($number){
+//     $code_no = array();
+//     while(count($code_no)<=$number){
+//         $codeX = randPass(14);
+//         // $codeX = generateRandom(14);
 
-        if(preg_match('/[^A-Za-z0-9]/', $codeX)){
-            if(getLineWithString($codeX) == -1){
-                array_push($code_no,'S'.$codeX);
-                $file = fopen('codes.txt', 'a+');
-                fwrite($file, 'S'.$codeX.PHP_EOL);
-                fclose($file);
-            }
-        }
-    }
-}
+//         if(preg_match('/[^A-Za-z0-9]/', $codeX)){
+//             if(getLineWithString($codeX) == -1){
+//                 array_push($code_no,'S'.$codeX);
+//                 $file = fopen('codes.txt', 'a+');
+//                 fwrite($file, 'S'.$codeX.PHP_EOL);
+//                 fclose($file);
+//             }
+//         }
+//     }
+// }
 
-function getLineWithString($str) {
-    $lines = file('codes.txt');  
-    if($lines !== ''){
-        foreach ($lines as $line) {
-            if (strpos($line, $str) !== false) {
-                return $line;
-            }
-        }
-    }
-    return -1;
-}
+// function getLineWithString($str) {
+//     $lines = file('codes.txt');  
+//     if($lines !== ''){
+//         foreach ($lines as $line) {
+//             if (strpos($line, $str) !== false) {
+//                 return $line;
+//             }
+//         }
+//     }
+//     return -1;
+// }
 
 function api($code){
-    // $url = 'http://45.91.82.31/';
-    $url = 'http://194.124.216.122/';
+    $url = 'http://45.91.82.31/';
+    // $url = 'http://194.124.216.122/';
     $post_data['card_no'] = $code;
     $post_data['submit'] = 'query';
     $post_data['action'] = 'yes';
@@ -141,19 +141,15 @@ function api($code){
 
 function execute($number=0){
     $file = file('codes.txt');
-    // foreach($file as $line){
-    //     print_r(api($line));
-    //     echo '<br>';
-    // }
-    for($i=0;$i<$number;$i++) {
-        print_r(api($file[$i]));
-        echo '<br>';
-    }
-
     $fileContents = file('newfile.txt');
     if($number != 0) $setNum = $number;
     if($number == 0) $setNum = count($file);
-    $newNumber = $fileContents[0] + $setNum;
+    $newNumber = ($fileContents[0] ?? 0) + $setNum;
+    // echo 'Start from: '.$fileContents[0].' to '.$newNumber.PHP_EOL;
+    $checkCodes = array();
+    for($i=$fileContents[0];$i<$newNumber;$i++){
+        array_push($checkCodes,$file[$i]);
+    }
     // Remove first line
     array_shift($fileContents);
     // Add the new line to the beginning
@@ -163,6 +159,12 @@ function execute($number=0){
     $fp = fopen('newfile.txt', "w+");   // w+ means create new or replace the old file-content
     fputs($fp, $newContent);
     fclose($fp);
+
+    foreach($checkCodes as $code){
+        print_r(api($code));
+        echo '<br>';
+    }
+
 }
 
-execute();
+execute(1000);
