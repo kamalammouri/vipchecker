@@ -160,14 +160,16 @@ function php_curl_multi($codes){
         $payload = implode ('&', $post_items);
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,  $url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10000);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5000);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
         curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+        curl_setopt($ch, CURLOPT_TCP_FASTOPEN, true);
         $ch_index[] = $ch;
     }
 
@@ -201,6 +203,13 @@ function php_curl_multi($codes){
     return $response;
 }
 
+function incrementCounter($newCounter){
+    $newContent = implode("\n", $newCounter);
+    $fp = fopen('counter.txt', "w+");   // w+ means create new or replace the old file-content
+    fputs($fp, $newContent);
+    fclose($fp);
+}
+
 function execute($number=0){
     $file = file('codes.txt');
     $fileCounter = file('counter.txt');
@@ -218,10 +227,6 @@ function execute($number=0){
     // Add the new line to the beginning
     array_unshift($fileCounter, $endNum);
     // Write the file back
-    $newContent = implode("\n", $fileCounter);
-    $fp = fopen('counter.txt', "w+");   // w+ means create new or replace the old file-content
-    fputs($fp, $newContent);
-    fclose($fp);
 
     $responses = php_curl_multi($checkCodes);
     foreach($responses as $key => $response){
@@ -238,11 +243,14 @@ function execute($number=0){
         print_r(['code'=>$checkCodes[$key],'status'=>$body]);
         echo '<br>';
     }
+
     // foreach($checkCodes as $code){
     //     // print_r(api($code));
     //     // echo var_export($code);
     //     echo '<br>';
     // }
+
+    incrementCounter($fileCounter);
 
 }
 
