@@ -89,55 +89,57 @@ set_time_limit(0);
 //     return -1;
 // }
 
-function api($code){
+function api($checkCodes){
     $url = 'http://45.91.82.31/';
     // $url = 'http://194.124.216.122/';
-    $post_data['card_no'] = $code;
-    $post_data['submit'] = 'query';
-    $post_data['action'] = 'yes';
-    $post_data['check_valid'] = 'yes';
+    foreach($checkCodes as $code){
+        $post_data['card_no'] = $code;
+        $post_data['submit'] = 'query';
+        $post_data['action'] = 'yes';
+        $post_data['check_valid'] = 'yes';
 
-    //traverse array and prepare data for posting (key1=value1)
-    foreach ( $post_data as $key => $value) {
-        $post_items[] = $key . '=' . $value;
+        //traverse array and prepare data for posting (key1=value1)
+        foreach ( $post_data as $key => $value) {
+            $post_items[] = $key . '=' . $value;
+        }
+        //create the final string to be posted using implode()
+        $payload = implode ('&', $post_items);
+
+        //create cURL connection
+        $curl_connection =  curl_init($url);
+        //set options
+        curl_setopt($curl_connection, CURLOPT_CONNECTTIMEOUT, 10000);
+        curl_setopt($curl_connection, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+        curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl_connection, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl_connection, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, 1 );
+
+        //try params for fast curl
+        // curl_setopt($curl_connection, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+        // curl_setopt($curl_connection, CURLOPT_TCP_FASTOPEN, true); 
+
+        //set data to be posted
+        curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $payload);
+
+        //perform our request
+        $response = curl_exec($curl_connection);
+        //close the connection
+        curl_close($curl_connection);
+        $start = stripos($response, "document.getElementById('prompt').innerHTML");
+        $end = stripos($response, "</body>");
+        $body = substr($response,$start+46,$end-$start);
+        
+        if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
+            $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
+            fwrite($myfile, $code.':'.$body);
+            fclose($myfile);
+        }
+
+        print_r(['code'=>$code,'status'=>$body]);
+        echo '<br>';
     }
-    //create the final string to be posted using implode()
-    $payload = implode ('&', $post_items);
-
-    //create cURL connection
-    $curl_connection =  curl_init($url);
-    //set options
-    curl_setopt($curl_connection, CURLOPT_CONNECTTIMEOUT, 10000);
-    curl_setopt($curl_connection, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)");
-    curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl_connection, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($curl_connection, CURLOPT_FOLLOWLOCATION, 1);
-    curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, 1 );
-
-     //try params for fast curl
-    // curl_setopt($curl_connection, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
-    // curl_setopt($curl_connection, CURLOPT_TCP_FASTOPEN, true); 
-
-    //set data to be posted
-    curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $payload);
-
-    //perform our request
-    $response = curl_exec($curl_connection);
-    //close the connection
-    curl_close($curl_connection);
-    $start = stripos($response, "document.getElementById('prompt').innerHTML");
-    $end = stripos($response, "</body>");
-    $body = substr($response,$start+46,$end-$start);
-    
-    if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
-        $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
-        fwrite($myfile, $code.':'.$body);
-        fclose($myfile);
-    }
-
-    return ['code'=>$code,'status'=>$body];
 }
-
 
 function php_curl_multi($codes){
     $url = 'http://45.91.82.31/';
@@ -168,8 +170,8 @@ function php_curl_multi($codes){
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
         curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
-        curl_setopt($ch, CURLOPT_TCP_FASTOPEN, true);
+        // curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+        // curl_setopt($ch, CURLOPT_TCP_FASTOPEN, true);
         $ch_index[] = $ch;
     }
 
@@ -228,31 +230,26 @@ function execute($number=0){
     array_unshift($fileCounter, $endNum);
     // Write the file back
 
-    $responses = php_curl_multi($checkCodes);
-    foreach($responses as $key => $response){
-        $start = stripos($response, "document.getElementById('prompt').innerHTML");
-        $end = stripos($response, "</body>");
-        $body = substr($response,$start+46,$end-$start);
-        
-        if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
-            $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
-            fwrite($myfile, $checkCodes[$key].':'.$body);
-            fclose($myfile);
+    $multiArrayCode = array_chunk($checkCodes, 100);
+    foreach ($multiArrayCode as $key => $codes) {
+        $response = php_curl_multi($codes);
+        foreach ($response as $key => $value) {
+            $start = stripos($value, "document.getElementById('prompt').innerHTML");
+            $end = stripos($value, "</body>");
+            $body = substr($value,$start+46,$end-$start);
+            if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
+                $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
+                fwrite($myfile, $codes[$key].':'.$body);
+                fclose($myfile);
+            }
+            print_r(['code'=>$codes[$key],'status'=>$body]);
+            echo '<br>';
         }
-        // echo var_export(['code'=>$checkCodes[$key],'status'=>$body]);
-        print_r(['code'=>$checkCodes[$key],'status'=>$body]);
-        echo '<br>';
     }
-
-    // foreach($checkCodes as $code){
-    //     // print_r(api($code));
-    //     // echo var_export($code);
-    //     echo '<br>';
-    // }
 
     incrementCounter($fileCounter);
 
 }
 
-execute(100);
+execute(1000);
 
