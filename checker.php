@@ -230,11 +230,6 @@ function execute($number=0){
     for($i=$startNum;$i<$endNum;$i++){
         array_push($checkCodes,$file[$i]);
     }
-    // Remove first line
-    array_shift($fileCounter);
-    // Add the new line to the beginning
-    array_unshift($fileCounter, $endNum);
-    // Write the file back
 
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $key => $codes) {
@@ -243,6 +238,11 @@ function execute($number=0){
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
             $body = substr($value,$start+46,$end-$start);
+            if($body == ''){
+                $myfile = fopen("codes.txt", "a") or die("Unable to open file!");
+                fwrite($myfile, $codes[$key]);
+                fclose($myfile);
+            }
             if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
                 $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
                 fwrite($myfile, $codes[$key].':'.$body);
@@ -251,9 +251,15 @@ function execute($number=0){
             print_r(['code'=>$codes[$key],'status'=>$body]);
             echo '<br>';
         }
+        // Remove first line
+        array_shift($fileCounter);
+        // Add the new line to the beginning
+        array_unshift($fileCounter, $startNum + 100);
+        // Write the file back
+        incrementCounter($fileCounter);
     }
 
-    incrementCounter($fileCounter);
+    
 
 }
 
