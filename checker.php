@@ -142,7 +142,13 @@ function api($checkCodes){
 }
 
 function php_curl_multi($codes){
-    $url = 'http://45.91.82.31/';
+
+    $urls = array(
+        'http://45.91.82.31/',
+        'http://194.124.216.122/',
+    );
+    $keyUrl = array_rand($urls);
+    $url = $urls[$keyUrl];
 
     $ch_index = array(); // store all curl init
     $response = array();
