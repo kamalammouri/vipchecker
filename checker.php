@@ -155,6 +155,7 @@ function php_curl_multi($codes){
 
     // create both cURL resources
     foreach ($codes as $key => $code) {
+        // $post_data['sn'] = '201105014023';
         $post_data['card_no'] = trim($code);
         $post_data['submit'] = 'query';
         $post_data['action'] = 'yes';
@@ -225,7 +226,13 @@ function execute($number=0){
     if($number == 0) $setNum = count($file);
     $startNum = $fileCounter[0] ?? 0;
     $endNum = $startNum + $setNum;
-    // echo 'Start from: '.$fileCounter[0].' to '.$endNum.PHP_EOL;
+    // Remove first line
+    array_shift($fileCounter);
+    // Add the new line to the beginning
+    array_unshift($fileCounter, $endNum);
+    // Write the file back
+    incrementCounter($fileCounter);
+    
     $checkCodes = array();
     for($i=$startNum;$i<$endNum;$i++){
         array_push($checkCodes,$file[$i]);
@@ -251,17 +258,13 @@ function execute($number=0){
             print_r(['code'=>$codes[$key],'status'=>$body]);
             echo '<br>';
         }
-        // Remove first line
-        array_shift($fileCounter);
-        // Add the new line to the beginning
-        array_unshift($fileCounter, $startNum + 100);
-        // Write the file back
-        incrementCounter($fileCounter);
+
     }
+
 
     
 
 }
 
-execute(10000);
+execute(50000);
 
