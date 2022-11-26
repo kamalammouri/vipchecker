@@ -13,9 +13,18 @@
         iks card_no checker
     </h1>
      
-    <form method="post" >
-        <input type="number" id="repeat" name="repeat" min="1000" max="50000" value="1000" step="100">
-        <input type="submit" name="check" value="check"/>
+    <form method="post">
+        <div>
+            <label>lenght  : </label>
+            <input type="number" id="repeat" name="repeat" min="1000" max="50000" value="1000" step="100">
+            <input type="submit" name="check" value="check"/>
+        </div>
+        <br>
+        <div>
+            <label>Card_NO  : </label>
+            <input type="text" id="card_no" name="card_no" value="">
+            <input type="submit" id="query" name="submit" value="query">
+        </div>
     </form>
 </head>
  
@@ -314,6 +323,15 @@ if(isset($_POST['check'])) {
     if(isset($_POST['repeat'])){
         echo 'vip iks is runing => '.$_POST['repeat'].' time <br>';   
         execute($_POST['repeat']);
+    }
+    // changeCode('I');
+    // genCodes(10000);
+}
+
+if(isset($_POST['query'])) {
+    if(isset($_POST['card_no'])){
+        echo 'check card_no => '.$_POST['card_no'].'<br>';   
+        api($_POST['card_no']);
     }
     // changeCode('I');
     // genCodes(10000);
