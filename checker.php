@@ -23,7 +23,7 @@
         <div>
             <label>Card_NO  : </label>
             <input type="text" id="card_no" name="card_no" value="">
-            <input type="submit" id="query" name="submit" value="query">
+            <input type="submit" name="query" value="query">
         </div>
     </form>
 </head>
@@ -122,10 +122,15 @@ function getLineWithString($str) {
     return -1;
 }
 
-function api($checkCodes){
-    $url = 'http://45.91.82.31/';
-    // $url = 'http://194.124.216.122/';
+function php_curl($checkCodes){
     foreach($checkCodes as $code){
+        api($code);
+    }
+}
+
+function api($code){
+        $url = 'http://45.91.82.31/';
+        // $url = 'http://194.124.216.122/';
         $post_data['card_no'] = $code;
         $post_data['submit'] = 'query';
         $post_data['action'] = 'yes';
@@ -139,26 +144,25 @@ function api($checkCodes){
         $payload = implode ('&', $post_items);
 
         //create cURL connection
-        $curl_connection =  curl_init($url);
+        $ch =  curl_init();
         //set options
-        curl_setopt($curl_connection, CURLOPT_CONNECTTIMEOUT, 10000);
-        curl_setopt($curl_connection, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)");
-        curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl_connection, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl_connection, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($curl_connection, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5000);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($ch, CURLOPT_HEADER, 0);
 
         //try params for fast curl
-        // curl_setopt($curl_connection, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
-        // curl_setopt($curl_connection, CURLOPT_TCP_FASTOPEN, true); 
-
-        //set data to be posted
-        curl_setopt($curl_connection, CURLOPT_POSTFIELDS, $payload);
+        // curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
+        // curl_setopt($ch, CURLOPT_TCP_FASTOPEN, true); 
 
         //perform our request
-        $response = curl_exec($curl_connection);
+        $response = curl_exec($ch);
         //close the connection
-        curl_close($curl_connection);
+        curl_close($ch);
         $start = stripos($response, "document.getElementById('prompt').innerHTML");
         $end = stripos($response, "</body>");
         $body = substr($response,$start+46,$end-$start);
@@ -171,7 +175,6 @@ function api($checkCodes){
 
         print_r(['code'=>$code,'status'=>$body]);
         echo '<br>';
-    }
 }
 
 function php_curl_multi($codes){
@@ -274,7 +277,6 @@ function execute($number=0){
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $keyX => $codes) {
         $response = php_curl_multi($codes);
-        sleep(2);
         foreach ($response as $key => $value) {
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
@@ -298,8 +300,9 @@ function execute($number=0){
                 // some statement that removes all printed/echoed items
                 ob_end_clean();
             }
-                print_r(['code'=>$codes[$key],'status'=>$body]);
-                echo '<br>';
+            
+            print_r(['code'=>$codes[$key],'status'=>$body]);
+            echo '<br>';
         }
     }
 }
@@ -327,8 +330,7 @@ if(isset($_POST['check'])) {
     // changeCode('I');
     // genCodes(10000);
 }
-
-if(isset($_POST['query'])) {
+else if(isset($_POST['query'])) {
     if(isset($_POST['card_no'])){
         echo 'check card_no => '.$_POST['card_no'].'<br>';   
         api($_POST['card_no']);
