@@ -14,17 +14,30 @@
     </h1>
      
     <form method="post">
+        <br>
         <div>
             <label>lenght  : </label>
-            <input type="number" id="repeat" name="repeat" min="1000" max="50000" value="1000" step="100">
+            <input type="number" name="repeat" min="1000" max="50000" value="1000" step="100">
             <input type="submit" name="check" value="check"/>
         </div>
         <br>
         <div>
             <label>Card_NO  : </label>
-            <input type="text" id="card_no" name="card_no" value="">
+            <input type="text" name="card_no" value="">
             <input type="submit" name="query" value="query">
         </div>
+        <br>
+        <div>
+            <label>lenght  : </label>
+            <input type="number" name="codes_lenght" min="1000" max="25000" value="1000" step="100">
+            <label>package  : </label>
+            <select name="package">
+                <option value="VIP">VIP</option>
+                <option value="SUP">Super</option>
+            </select>
+            <input type="submit" name="gen" value="gen">
+        </div>
+        <br>
     </form>
 </head>
  
@@ -93,10 +106,21 @@ function generateRandom($length = 10) {
 
 }
 
-function genCodes($number){
+function genCodes($number,$package="VIP"){
     $code_no = array();
+    switch($package) {
+        case 'VIP':
+            $lenght=14;
+            $FirstChar = 'I';
+        break;
+        case 'SUP':
+            $lenght=14;
+            $FirstChar = 'S';
+        break;
+
+    }
     while(count($code_no)<=$number){
-        $codeX = 'I'.randPass(14);
+        $codeX = $FirstChar.randPass($lenght);
         // $codeX = generateRandom(14);
 
         if(preg_match('/[^A-Za-z0-9]/', $codeX)){
@@ -327,14 +351,21 @@ if(isset($_POST['check'])) {
         echo 'vip iks is runing => '.$_POST['repeat'].' time <br>';   
         execute($_POST['repeat']);
     }
-    // changeCode('I');
-    // genCodes(10000);
 }
+
 else if(isset($_POST['query'])) {
-    if(isset($_POST['card_no'])){
         echo 'check card_no => '.$_POST['card_no'].'<br>';   
-        api($_POST['card_no']);
+        if(isset($_POST['card_no'])){
+            api($_POST['card_no']);
+        }
+}
+else if(isset($_POST['gen'])) { 
+    if(isset($_POST['package'])){
+        genCodes($_POST['codes_lenght'],$_POST['package']);
     }
+}
+
+
     // changeCode('I');
     // genCodes(10000);
-}
+clearstatcache();
