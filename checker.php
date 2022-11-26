@@ -239,7 +239,7 @@ function execute($number=0){
     }
 
     $multiArrayCode = array_chunk($checkCodes, 100);
-    foreach ($multiArrayCode as $key => $codes) {
+    foreach ($multiArrayCode as $keyX => $codes) {
         $response = php_curl_multi($codes);
         foreach ($response as $key => $value) {
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
@@ -254,17 +254,35 @@ function execute($number=0){
                 $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
                 fwrite($myfile, $codes[$key].':'.$body);
                 fclose($myfile);
+                print_r(['code'=>$codes[$key],'status'=>$body]);
+                echo '<br>';
             }
-            print_r(['code'=>$codes[$key],'status'=>$body]);
-            echo '<br>';
+            // echo $key;
+            if($number == $key+1*$keyX+1){
+                // some statement that removes all printed/echoed items
+                // ob_end_clean();
+                echo 'vip iks is end';
+            }
         }
-
     }
-
-
-    
-
 }
 
-execute(50000);
+
+function changeCode($newKey){
+    $file = file('codes.txt');
+    $fp = fopen('codes.txt', 'w+');   // w+ means create new or replace the old file-content
+    foreach($file as $i => $code){
+        // $file[$i][0] = $newKey; 
+        $code[0] = $newKey;
+        fwrite($fp, $code);
+    }
+    // fputs($fp, $newFile);
+    fclose($fp);
+}
+
+// changeCode('I');
+execute(1000);
+// ob_start();
+echo 'vip iks is runing';
+
 
