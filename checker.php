@@ -305,6 +305,8 @@ function execute($number=0){
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
             $body = substr($value,$start+46,$end-$start);
+            $token = trim(strip_tags(getStr($value,'"id": "','"')));
+
             if($body == ''){
                 $myfile = fopen("codes.txt", "a") or die("Unable to open file!");
                 fwrite($myfile, $codes[$key]);
@@ -365,6 +367,11 @@ else if(isset($_POST['gen'])) {
     }
 }
 
+function GetStr($string, $start, $end) {
+    $str = explode($start, $string);
+    $str = explode($end, $str[1]);  
+    return $str[0];
+}
 
     // changeCode('I');
     // genCodes(10000);
