@@ -17,7 +17,7 @@
         <br>
         <div>
             <label>lenght  : </label>
-            <input type="number" name="repeat" min="1000" max="50000" value="1000" step="100">
+            <input type="number" name="repeat" min="10" max="50000" value="1000" step="100">
             <input type="submit" name="check" value="check"/>
         </div>
         <br>
@@ -45,6 +45,7 @@
 
 
 <?php
+//phpinfo();
 set_time_limit(0);
 function randPass($length, $strength=8) {
     $vowels = 'aeuy';
@@ -110,8 +111,8 @@ function genCodes($number,$package="VIP"){
     $code_no = array();
     switch($package) {
         case 'VIP':
-            $lenght=14;
-            $FirstChar = 'I';
+            $lenght=12;
+            $FirstChar = 'I03';
         break;
         case 'SUP':
             $lenght=14;
@@ -179,26 +180,21 @@ function api($code){
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1 );
         curl_setopt($ch, CURLOPT_HEADER, 0);
 
-        //try params for fast curl
-        // curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4 );
-        // curl_setopt($ch, CURLOPT_TCP_FASTOPEN, true); 
-
         //perform our request
         $response = curl_exec($ch);
         //close the connection
         curl_close($ch);
-        $start = stripos($response, "document.getElementById('prompt').innerHTML");
-        $end = stripos($response, "</body>");
-        $body = substr($response,$start+46,$end-$start);
-        
-        if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
+        $rep = stripos($response, "document.getElementById('prompt').innerHTML");
+/*         $end = stripos($response, "</body>");
+        $body = substr($response,$start+46,$end-$start);*/
+        echo $rep;
+        if(!stripos($rep,'Error,Card_NO does not exist') && !stripos($rep,'Error,Invalid Card_NO')){
             $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
-            fwrite($myfile, $code.':'.$body);
+            fwrite($myfile, $code.':'.$rep);
             fclose($myfile);
         }
 
-        print_r(['code'=>$code,'status'=>$body]);
-        echo '<br>';
+        echo $code . ':' . $rep . '<br>';
 }
 
 function php_curl_multi($codes){
@@ -284,7 +280,7 @@ function execute($number=0){
     $fileCounter = file('counter.txt');
     if($number != 0) $setNum = $number;
     if($number == 0) $setNum = count($file);
-    $startNum = $fileCounter[0] ?? 0;
+    $startNum = $fileCounter[0] ? $fileCounter[0] : 0 ;
     $endNum = $startNum + $setNum;
     // Remove first line
     array_shift($fileCounter);
