@@ -39,7 +39,6 @@
         </div>
         <br>
     </form>
-    <p id="gen-count"></p>
 </body>
 
 </html>
@@ -49,7 +48,6 @@
 //declare(strict_types=1);
 
 set_time_limit(0);
-
 function randPass($length, $strength = 8)
 {
     $vowels = 'aeuy';
@@ -186,59 +184,6 @@ function api($code)
     echo '<br>';
 }
 
-function php_curl_multi($codes)
-{
-    $url = 'http://194.124.216.122/';
-    $ch_index = array();
-    $response = array();
-
-    foreach ($codes as $key => $code) {
-        $post_data['card_no'] = trim($code);
-        $post_data['submit'] = 'query';
-        $post_data['action'] = 'yes';
-        $post_data['check_valid'] = 'yes';
-
-        foreach ($post_data as $key => $value) {
-            $post_items[] = $key . '=' . $value;
-        }
-
-        $payload = implode('&', $post_items);
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5000);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        $ch_index[] = $ch;
-    }
-
-    $mh = curl_multi_init();
-
-    foreach ($ch_index as $key => $ch) {
-        curl_multi_add_handle($mh, $ch);
-    }
-
-    do {
-        $status = curl_multi_exec($mh, $active);
-        if ($active) {
-            curl_multi_select($mh);
-        }
-    } while ($active && $status == CURLM_OK);
-
-    foreach ($ch_index as $key => $ch) {
-        $response[] = curl_multi_getcontent($ch);
-        curl_multi_remove_handle($mh, $ch);
-    }
-
-    curl_multi_close($mh);
-
-    return $response;
-}
-
 function php_curl_multi_with_timeout($codes, $timeout_interval = 100, $timeout_sleep = 1)
 {
     $url = 'http://194.124.216.122/';
@@ -254,6 +199,7 @@ function php_curl_multi_with_timeout($codes, $timeout_interval = 100, $timeout_s
         foreach ($post_data as $key => $value) {
             $post_items[] = $key . '=' . $value;
         }
+        
 
         $payload = implode('&', $post_items);
 
@@ -299,18 +245,9 @@ function php_curl_multi_with_timeout($codes, $timeout_interval = 100, $timeout_s
 }
 
 
-function incrementCounter($newCounter)
-{
-    $newContent = implode("\n", $newCounter);
-    $fp = fopen('counter.txt', "w+");
-    fputs($fp, $newContent);
-    fclose($fp);
-}
-
 function execute($number = 0)
 {
     $file = fopen('codes.txt', 'r+');
-    $fileCounter = file('counter.txt');
     $setNum = $number != 0 ? $number : count(file('codes.txt'));
     $startNum = 0;
     $endNum = $startNum + $setNum;
@@ -326,7 +263,6 @@ function execute($number = 0)
 
     array_shift($fileCounter);
     array_unshift($fileCounter, $endNum);
-    incrementCounter($fileCounter);
 
     $multiArrayCode = array_chunk($checkCodes, 100);
     foreach ($multiArrayCode as $keyX => $codes) {
@@ -354,18 +290,9 @@ function execute($number = 0)
 
             // Remove code from file after checking
             $lineToRemove = $startNum + $keyX * 100 + $key + 1;
-            for ($i = 0; $i < $lineToRemove; $i++) {
-                fgets($file); // Read lines until the line to remove
-            }
-            $currentPosition = ftell($file); // Store the current position
-            fgets($file); // Read the line to remove
-            $remainingContent = stream_get_contents($file); // Read the remaining content
-            fseek($file, $currentPosition); // Move the file pointer back to the stored position
-            fwrite($file, $remainingContent); // Overwrite the line to remove
-            ftruncate($file, ftell($file)); // Truncate the file to remove any extra content
+            removeLineFromFile('codes.txt', $lineToRemove);
         }
     }
-
     fclose($file);
 }
 
@@ -405,4 +332,12 @@ function writeToFile($filename, $contentArray)
     file_put_contents($filename, $content, FILE_APPEND);
 }
 
+function removeLineFromFile($filename, $lineNumber)
+{
+    $lines = file($filename);
+    if (isset($lines[$lineNumber - 1])) {
+        unset($lines[$lineNumber - 1]);
+        file_put_contents($filename, implode("", $lines));
+    }
+}
 clearstatcache();
