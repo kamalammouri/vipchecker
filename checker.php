@@ -249,9 +249,7 @@ function execute($number = 0)
 {
     $file = fopen('codes.txt', 'r+');
     $setNum = $number != 0 ? $number : count(file('codes.txt'));
-    $startNum = 0;
-    $endNum = $startNum + $setNum;
-
+    $array_chunk = 100;
     fseek($file, 0); // Move the file pointer to the beginning
 
     $checkCodes = [];
@@ -261,10 +259,7 @@ function execute($number = 0)
 
     fseek($file, 0); // Move the file pointer to the beginning
 
-    array_shift($fileCounter);
-    array_unshift($fileCounter, $endNum);
-
-    $multiArrayCode = array_chunk($checkCodes, 100);
+    $multiArrayCode = array_chunk($checkCodes, $array_chunk);
     foreach ($multiArrayCode as $keyX => $codes) {
         $response = php_curl_multi_with_timeout($codes);
         foreach ($response as $key => $value) {
@@ -289,8 +284,7 @@ function execute($number = 0)
             }
 
             // Remove code from file after checking
-            $lineToRemove = $startNum + $keyX * 100 + $key + 1;
-            removeLineFromFile('codes.txt', $lineToRemove);
+            removeLineFromFile('codes.txt',$array_chunk);
         }
     }
     fclose($file);
