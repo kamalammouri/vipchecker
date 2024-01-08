@@ -111,8 +111,8 @@ function genCodes($number, $package = "VIP")
             $FirstChar = 'S';
             break;
             case '2In1':
-                $lenght = 14;
-                $FirstChar = 'L';
+                $lenght = 12;
+                $FirstChar = 'L12';
                 break;
     }
     while (count($code_no) <= $number) {
