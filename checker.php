@@ -34,8 +34,10 @@
             <select name="package">
                 <option value="VIP">VIP</option>
                 <option value="SUP">Super</option>
+                <option value="2In1">High 2In1(12M)</option>
             </select>
             <input type="submit" name="gen" value="gen">
+            <div id="output"></div>
         </div>
         <br>
     </form>
@@ -108,6 +110,10 @@ function genCodes($number, $package = "VIP")
             $lenght = 14;
             $FirstChar = 'S';
             break;
+            case '2In1':
+                $lenght = 14;
+                $FirstChar = 'L';
+                break;
     }
     while (count($code_no) <= $number) {
         $codeX = $FirstChar . randPass($lenght);
@@ -220,6 +226,9 @@ function php_curl_multi_with_timeout($codes, $timeout_interval = 100, $timeout_s
 
     for ($i = 0; $i < $request_count; $i++) {
         curl_multi_add_handle($mh, $ch_index[$i]);
+        echo `<script>
+        const output = document.getElementById("output");
+        output.innerHTML = parseInt(output.value ?? 0) + .$i.</script>`;
 
         // Introduce timeout interval
         if (($i + 1) % $timeout_interval === 0 && $i !== 0) {
@@ -285,6 +294,7 @@ function execute($number = 0)
 
             // Remove code from file after checking
             removeLineFromFile('codes.txt',$array_chunk);
+            //print_r(['code' => $codes[$key], 'status' => $body].'<br>');
         }
     }
     fclose($file);
