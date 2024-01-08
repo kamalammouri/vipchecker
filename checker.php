@@ -249,7 +249,7 @@ function execute($number = 0)
 {
     $file = fopen('codes.txt', 'r+');
     $setNum = $number != 0 ? $number : count(file('codes.txt'));
-    $array_chunk = 100;
+    $array_chunk = $number > 100 ? $number/10 : $number;
     fseek($file, 0); // Move the file pointer to the beginning
 
     $checkCodes = [];
